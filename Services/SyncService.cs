@@ -25,7 +25,9 @@ namespace POS.Client.Services
             var products = await _apiService.GetProductsForPOSAsync(storeId);
             var inventory = await _apiService.GetInventoryForPOSAsync(1);
 
-            // Clear old data
+            // Clear old data (inclusi addon)
+            _db.ProductAddonItems.RemoveRange(_db.ProductAddonItems);
+            _db.ProductAddons.RemoveRange(_db.ProductAddons);
             _db.ProductVariants.RemoveRange(_db.ProductVariants);
             _db.ProductModifiers.RemoveRange(_db.ProductModifiers);
             _db.ModifierOptions.RemoveRange(_db.ModifierOptions);
@@ -51,6 +53,7 @@ namespace POS.Client.Services
                 _db.Products.Add(product);
                 _db.SaveChanges();
 
+                // Variants
                 foreach (var v in p.Variants ?? new List<VariantResponse>())
                 {
                     _db.ProductVariants.Add(new LocalProductVariant
@@ -63,6 +66,7 @@ namespace POS.Client.Services
                     });
                 }
 
+                // Modifiers
                 foreach (var m in p.Modifiers ?? new List<ModifierResponse>())
                 {
                     _db.ProductModifiers.Add(new LocalProductModifier
@@ -104,8 +108,39 @@ namespace POS.Client.Services
                         }
                     }
                 }
+
+                // ==================== ADDON (NUOVO) ====================
+                foreach (var addon in p.Addons ?? new List<AddonResponse>())
+                {
+                    var localAddon = new LocalProductAddon
+                    {
+                        ServerId = addon.Id,
+                        ProductId = p.Id,
+                        Name = addon.Name,
+                        MaxQuantity = addon.MaxQuantity,
+                        SortOrder = addon.SortOrder,
+                        IsActive = addon.IsActive,
+                        CreatedAt = addon.CreatedAt
+                    };
+                    _db.ProductAddons.Add(localAddon);
+                    _db.SaveChanges();
+
+                    foreach (var item in addon.Items ?? new List<AddonItemResponse>())
+                    {
+                        _db.ProductAddonItems.Add(new LocalProductAddonItem
+                        {
+                            ServerId = item.Id,
+                            AddonId = addon.Id,
+                            AddonProductId = item.AddonProductId,
+                            QuantityValue = item.QuantityValue,
+                            SortOrder = item.SortOrder,
+                            IsActive = item.IsActive
+                        });
+                    }
+                }
             }
 
+            // Inventory
             foreach (var inv in inventory)
             {
                 _db.Inventory.Add(new LocalInventory
@@ -158,12 +193,39 @@ namespace POS.Client.Services
         {
             return _db.ModifierOptions.Where(o => o.GroupId == groupId && o.IsActive).ToList();
         }
+
         public LocalModifierGroup GetModifierGroup(int groupId)
         {
             using var db = new POSDbContext();
             return db.ModifierGroups
                 .Include(g => g.Options)
                 .FirstOrDefault(g => g.ServerId == groupId);
+        }
+
+        // ==================== ADDON (NUOVO) ====================
+        public List<LocalProductAddon> GetAddons(int productId)
+        {
+            return _db.ProductAddons
+                .Where(a => a.ProductId == productId && a.IsActive)
+                .Include(a => a.Items)
+                .OrderBy(a => a.SortOrder)
+                .ToList();
+        }
+
+        public LocalProductAddon GetAddon(int addonId)
+        {
+            using var db = new POSDbContext();
+            return db.ProductAddons
+                .Include(a => a.Items)
+                .FirstOrDefault(a => a.ServerId == addonId);
+        }
+
+        public List<LocalProductAddonItem> GetAddonItems(int addonId)
+        {
+            return _db.ProductAddonItems
+                .Where(i => i.AddonId == addonId && i.IsActive)
+                .OrderBy(i => i.SortOrder)
+                .ToList();
         }
     }
 }

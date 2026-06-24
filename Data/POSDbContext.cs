@@ -2,6 +2,8 @@
 using POS.Client.Models;
 
 namespace POS.Client.Data
+
+
 {
     public class POSDbContext : DbContext
     {
@@ -13,6 +15,9 @@ namespace POS.Client.Data
             var folder = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(folder);
             DbPath = System.IO.Path.Join(path, "POSClient.db");
+
+            // Aggiungi questa riga:
+            Database.EnsureCreated();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -53,5 +58,8 @@ namespace POS.Client.Data
         public DbSet<LocalPayment> Payments { get; set; }
         public DbSet<LocalShift> Shifts { get; set; }
         public DbSet<SyncState> SyncStates { get; set; }
+        public DbSet<LocalProductAddon> ProductAddons { get; set; }
+        public DbSet<LocalProductAddonItem> ProductAddonItems { get; set; }
+        public DbSet<LocalSaleItemAddon> SaleItemAddons { get; set; }
     }
 }

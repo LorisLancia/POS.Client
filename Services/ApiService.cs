@@ -147,8 +147,10 @@ namespace POS.Client.Services
         public string Name { get; set; }
         public decimal BasePrice { get; set; }
         public decimal TaxRate { get; set; }
-        public List<VariantResponse> Variants { get; set; }
-        public List<ModifierResponse> Modifiers { get; set; }
+        public bool IsActive { get; set; }
+        public List<VariantResponse> Variants { get; set; } = new List<VariantResponse>();
+        public List<ModifierResponse> Modifiers { get; set; } = new List<ModifierResponse>();
+        public List<AddonResponse> Addons { get; set; } = new List<AddonResponse>(); // <-- AGGIUNGI
     }
 
     public class VariantResponse
@@ -221,5 +223,25 @@ namespace POS.Client.Services
         public decimal? ExpectedCash { get; set; }
         public decimal? ActualCash { get; set; }
         public decimal? Difference { get; set; }
+    }
+    // ==================== NUOVE CLASSI ADDON ====================
+    public class AddonResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int MaxQuantity { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<AddonItemResponse> Items { get; set; } = new List<AddonItemResponse>();
+    }
+
+    public class AddonItemResponse
+    {
+        public int Id { get; set; }
+        public int AddonProductId { get; set; }
+        public decimal QuantityValue { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
     }
 }
