@@ -16,10 +16,10 @@ namespace POS.Client.Views
             {
                 var username = txtUsername.Text;
                 var pin = txtPin.Password;
-                var storeId = int.Parse(txtStoreId.Text);
+                var companyId = int.Parse(txtcompanyId.Text);
 
                 var auth = new OfflineAuthService();
-                var result = await auth.LoginAsync(username, pin, storeId);
+                var result = await auth.LoginAsync(username, pin, companyId);
 
                 if (!result.Success)
                 {
@@ -31,7 +31,7 @@ namespace POS.Client.Views
                 AppState.AuthToken = result.Token;
                 AppState.CurrentUserId = result.User.Id;
                 AppState.CurrentUserName = result.User.FullName;
-                AppState.CurrentStoreId = storeId;
+                AppState.CurrentcompanyId = companyId;
 
                 // Se login online, ottieni anche MACHINE TOKEN (10 anni)
                 if (result.IsOnline)

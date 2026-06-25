@@ -35,10 +35,10 @@ namespace POS.Client.Services
             _client.AddDefaultHeader("Authorization", $"Bearer {token}");
         }
 
-        public async Task<LoginResponse> LoginAsync(string username, string pin, int storeId)
+        public async Task<LoginResponse> LoginAsync(string username, string pin, int companyId)
         {
             var request = new RestRequest("/auth/login", Method.Post);
-            request.AddJsonBody(new { username, pin, storeId });
+            request.AddJsonBody(new { username, pin, companyId });
             var response = await _client.ExecuteAsync(request);
             if (!response.IsSuccessful) throw new Exception(response.Content);
             return JsonConvert.DeserializeObject<LoginResponse>(response.Content);
@@ -53,9 +53,9 @@ namespace POS.Client.Services
             return JsonConvert.DeserializeObject<LoginResponse>(response.Content);
         }
 
-        public async Task<List<ProductResponse>> GetProductsForPOSAsync(int storeId)
+        public async Task<List<ProductResponse>> GetProductsForPOSAsync(int companyId)
         {
-            var request = new RestRequest($"/products/pos/{storeId}", Method.Get);
+            var request = new RestRequest($"/products/pos/{companyId}", Method.Get);
             var response = await _client.ExecuteAsync(request);
             if (!response.IsSuccessful) throw new Exception(response.Content);
             return JsonConvert.DeserializeObject<List<ProductResponse>>(response.Content);

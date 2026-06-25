@@ -9,7 +9,7 @@ namespace POS.Client.Models
     {
         [Key]
         public int ServerId { get; set; }
-        public int StoreId { get; set; }
+        public int companyId { get; set; }
         public string Name { get; set; }
         public string Category { get; set; }
         public string Sku { get; set; }
@@ -55,7 +55,7 @@ namespace POS.Client.Models
     {
         [Key]
         public int ServerId { get; set; }
-        public int StoreId { get; set; }
+        public int companyId { get; set; }
         public string Name { get; set; }
         public string SelectionType { get; set; }
         public int MinSelect { get; set; }
@@ -109,7 +109,7 @@ namespace POS.Client.Models
     {
         [Key]
         public int ServerId { get; set; }
-        public int StoreId { get; set; }
+        public int companyId { get; set; }
         public string Name { get; set; }
         public string Unit { get; set; }
         public string Category { get; set; }
@@ -133,7 +133,7 @@ namespace POS.Client.Models
     {
         [Key]
         public int ServerId { get; set; }
-        public int StoreId { get; set; }
+        public int companyId { get; set; }
         public int RoleId { get; set; }
         public string Username { get; set; }
         public string FullName { get; set; }
@@ -148,7 +148,7 @@ namespace POS.Client.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int LocalId { get; set; }
         public int? ServerId { get; set; }
-        public int StoreId { get; set; }
+        public int companyId { get; set; }
         public int WarehouseId { get; set; }
         public int PosClientId { get; set; }
         public int ShiftId { get; set; }

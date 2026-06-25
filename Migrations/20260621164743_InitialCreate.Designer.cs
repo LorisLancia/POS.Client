@@ -87,7 +87,7 @@ namespace POS.Client.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("StoreId")
+                    b.Property<int>("companyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Unit")
@@ -119,7 +119,7 @@ namespace POS.Client.Migrations
                     b.Property<string>("SelectionType")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("StoreId")
+                    b.Property<int>("companyId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("ServerId");
@@ -218,7 +218,7 @@ namespace POS.Client.Migrations
                     b.Property<string>("Sku")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("StoreId")
+                    b.Property<int>("companyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("TaxRate")
@@ -324,7 +324,7 @@ namespace POS.Client.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("StoreId")
+                    b.Property<int>("companyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Subtotal")
@@ -496,7 +496,7 @@ namespace POS.Client.Migrations
                     b.Property<string>("RoleName")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("StoreId")
+                    b.Property<int>("companyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")

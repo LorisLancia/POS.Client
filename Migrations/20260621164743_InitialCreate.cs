@@ -49,7 +49,7 @@ namespace POS.Client.Migrations
                 {
                     ServerId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    StoreId = table.Column<int>(type: "INTEGER", nullable: false),
+                    companyId = table.Column<int>(type: "INTEGER", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     Unit = table.Column<string>(type: "TEXT", nullable: true),
                     Category = table.Column<string>(type: "TEXT", nullable: true),
@@ -68,7 +68,7 @@ namespace POS.Client.Migrations
                 {
                     ServerId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    StoreId = table.Column<int>(type: "INTEGER", nullable: false),
+                    companyId = table.Column<int>(type: "INTEGER", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     SelectionType = table.Column<string>(type: "TEXT", nullable: true),
                     MinSelect = table.Column<int>(type: "INTEGER", nullable: false),
@@ -86,7 +86,7 @@ namespace POS.Client.Migrations
                 {
                     ServerId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    StoreId = table.Column<int>(type: "INTEGER", nullable: false),
+                    companyId = table.Column<int>(type: "INTEGER", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: true),
                     Category = table.Column<string>(type: "TEXT", nullable: true),
                     Sku = table.Column<string>(type: "TEXT", nullable: true),
@@ -109,7 +109,7 @@ namespace POS.Client.Migrations
                     LocalId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     ServerId = table.Column<int>(type: "INTEGER", nullable: true),
-                    StoreId = table.Column<int>(type: "INTEGER", nullable: false),
+                    companyId = table.Column<int>(type: "INTEGER", nullable: false),
                     WarehouseId = table.Column<int>(type: "INTEGER", nullable: false),
                     PosClientId = table.Column<int>(type: "INTEGER", nullable: false),
                     ShiftId = table.Column<int>(type: "INTEGER", nullable: false),
@@ -179,7 +179,7 @@ namespace POS.Client.Migrations
                 {
                     ServerId = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    StoreId = table.Column<int>(type: "INTEGER", nullable: false),
+                    companyId = table.Column<int>(type: "INTEGER", nullable: false),
                     RoleId = table.Column<int>(type: "INTEGER", nullable: false),
                     Username = table.Column<string>(type: "TEXT", nullable: true),
                     FullName = table.Column<string>(type: "TEXT", nullable: true),

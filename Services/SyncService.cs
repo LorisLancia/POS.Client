@@ -20,9 +20,9 @@ namespace POS.Client.Services
             _db = new POSDbContext();
         }
 
-        public async Task SyncProductsAsync(int storeId)
+        public async Task SyncProductsAsync(int companyId)
         {
-            var products = await _apiService.GetProductsForPOSAsync(storeId);
+            var products = await _apiService.GetProductsForPOSAsync(companyId);
             var inventory = await _apiService.GetInventoryForPOSAsync(1);
 
             // Clear old data
@@ -42,7 +42,7 @@ namespace POS.Client.Services
                 var product = new LocalProduct
                 {
                     ServerId = p.Id,
-                    StoreId = storeId,
+                    companyId = companyId,
                     Name = p.Name,
                     BasePrice = p.BasePrice,
                     TaxRate = p.TaxRate,
@@ -84,7 +84,7 @@ namespace POS.Client.Services
                             var group = new LocalModifierGroup
                             {
                                 ServerId = m.Group.Id,
-                                StoreId = storeId,
+                                companyId = companyId,
                                 Name = m.Group.Name,
                                 SelectionType = m.Group.SelectionType,
                                 MinSelect = 0,
@@ -156,7 +156,7 @@ namespace POS.Client.Services
                     _db.Materials.Add(new LocalMaterial
                     {
                         ServerId = inv.MaterialId,
-                        StoreId = storeId,
+                        companyId = companyId,
                         Name = inv.Material?.Name ?? "Unknown",
                         Unit = inv.Material?.Unit?.Symbol ?? "piece",
                         IsActive = true

@@ -103,7 +103,7 @@ namespace POS.Client.Services
                         posClientId = sale.PosClientId,
                         shiftId = sale.ShiftId,
                         userId = sale.UserId,
-                        storeId = sale.StoreId,
+                        companyId = sale.companyId,
                         startingCash = 1000,
                         clientSaleId = $"client-{sale.PosClientId}-{sale.LocalId}",
                         items = items.Select(i => new

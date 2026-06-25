@@ -16,16 +16,16 @@ namespace POS.Client.Services
             _api = new ApiService();
         }
 
-        public async Task<LoginResult> LoginAsync(string username, string pin, int storeId)
+        public async Task<LoginResult> LoginAsync(string username, string pin, int companyId)
         {
             // 1. Prova login ONLINE (se possibile)
             try
             {
-                var result = await _api.LoginAsync(username, pin, storeId);
+                var result = await _api.LoginAsync(username, pin, companyId);
                 if (!string.IsNullOrEmpty(result?.AccessToken))
                 {
                     // Salva utente in SQLite per login futuri offline
-                    SaveUserLocally(result.User, storeId, pin);
+                    SaveUserLocally(result.User, companyId, pin);
                     return new LoginResult
                     {
                         Success = true,
@@ -41,7 +41,7 @@ namespace POS.Client.Services
             }
 
             // 2. Login OFFLINE da SQLite
-            var localUser = _db.Users.FirstOrDefault(u => u.Username == username && u.StoreId == storeId && u.IsActive);
+            var localUser = _db.Users.FirstOrDefault(u => u.Username == username && u.companyId == companyId && u.IsActive);
             if (localUser == null)
                 return new LoginResult { Success = false, Error = "User not found locally. Connect to server first." };
 
@@ -64,9 +64,9 @@ namespace POS.Client.Services
             };
         }
 
-        private void SaveUserLocally(UserResponse user, int storeId, string pin)
+        private void SaveUserLocally(UserResponse user, int companyId, string pin)
         {
-            var existing = _db.Users.FirstOrDefault(u => u.ServerId == user.Id && u.StoreId == storeId);
+            var existing = _db.Users.FirstOrDefault(u => u.ServerId == user.Id && u.companyId == companyId);
             if (existing != null)
             {
                 existing.FullName = user.FullName;
@@ -78,7 +78,7 @@ namespace POS.Client.Services
                 _db.Users.Add(new LocalUser
                 {
                     ServerId = user.Id,
-                    StoreId = storeId,
+                    companyId = companyId,
                     Username = user.Username,
                     FullName = user.FullName,
                     RoleName = user.Role,

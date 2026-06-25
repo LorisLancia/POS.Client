@@ -6,7 +6,7 @@
         public static string MachineToken { get; set; } = string.Empty;    // Token macchina (10 anni, da SQLite)
         public static int CurrentUserId { get; set; }
         public static string CurrentUserName { get; set; } = string.Empty;
-        public static int CurrentStoreId { get; set; } = 1;
+        public static int CurrentcompanyId { get; set; } = 1;
         public static int CurrentShiftId { get; set; }
         public static bool IsLoggedIn => !string.IsNullOrEmpty(AuthToken);
     }

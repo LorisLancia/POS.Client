@@ -15,7 +15,7 @@
             <PasswordBox x:Name="txtPin" Height="30" Padding="5"/>
 
             <TextBlock Text="Store ID" Margin="0,5"/>
-            <TextBox x:Name="txtStoreId" Height="30" Padding="5" Text="1"/>
+            <TextBox x:Name="txtcompanyId" Height="30" Padding="5" Text="1"/>
 
             <Button x:Name="btnLogin" Content="Login" Height="35" Margin="0,20,0,0" 
                     Background="#FF007ACC" Foreground="White" Click="btnLogin_Click"/>

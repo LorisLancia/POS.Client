@@ -258,7 +258,7 @@ namespace POS.Client.Views
 
                 var sale = new LocalSale
                 {
-                    StoreId = AppState.CurrentStoreId,
+                    companyId = AppState.CurrentcompanyId,
                     WarehouseId = 1,
                     PosClientId = 1,
                     ShiftId = AppState.CurrentShiftId,
