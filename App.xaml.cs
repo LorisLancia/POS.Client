@@ -2,6 +2,7 @@
 using System.Windows;
 using POS.Client.Services;
 using POS.Client.Views;
+using POS.Client.Models; 
 
 namespace POS.Client
 {
@@ -11,8 +12,7 @@ namespace POS.Client
         {
             base.OnStartup(e);
 
-            // IMPORTANTE: non chiudere l'app quando l'ultima finestra si chiude
-            // Cosi possiamo chiudere il wizard e aprire MainWindow senza problemi
+            // Mantieni l'app viva durante il wizard di setup e fino a quando la MainWindow è stata creata.
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             try
@@ -24,9 +24,9 @@ namespace POS.Client
                 {
                     // Primo avvio: apri wizard
                     var wizard = new SetupWizardWindow();
-                    var ok = wizard.ShowDialog() ?? false;
+                    bool? ok = wizard.ShowDialog();
 
-                    if (!ok)
+                    if (ok != true)
                     {
                         Shutdown();
                         return;
@@ -44,20 +44,13 @@ namespace POS.Client
                 }
 
                 // Popola AppState dalla config salvata
-                if (config != null)
-                {
-                    AppState.ServerUrl = config.ServerUrl;
-                    AppState.MachineToken = config.MachineToken;
-                    AppState.CurrentcompanyId = config.CompanyId;
-                    AppState.HardwareId = config.HardwareId;
-                    AppState.PosClientId = config.PosClientId;
-                    AppState.WarehouseId = config.WarehouseId;
-                    AppState.RegisterName = config.RegisterName;
-                }
+                PopulateAppState(config);
 
                 // Avvia MainWindow
-                var main = new MainWindow();
-                main.Show();
+                var mainWindow = new MainWindow();
+                MainWindow = mainWindow;
+                mainWindow.Show();
+                ShutdownMode = ShutdownMode.OnMainWindowClose;
             }
             catch (Exception ex)
             {
@@ -65,6 +58,17 @@ namespace POS.Client
                     "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
+        }
+
+        public void PopulateAppState(SetupConfig config)
+        {
+            AppState.ServerUrl = config.ServerUrl;
+            AppState.MachineToken = config.MachineToken;
+            AppState.CurrentcompanyId = config.CompanyId;
+            AppState.HardwareId = config.HardwareId;
+            AppState.PosClientId = config.PosClientId;
+            AppState.WarehouseId = config.WarehouseId;
+            AppState.RegisterName = config.RegisterName;
         }
     }
 }

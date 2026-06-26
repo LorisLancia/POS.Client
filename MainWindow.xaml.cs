@@ -3,6 +3,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using POS.Client.Services;
 using POS.Client.Views;
+using RestSharp;
 
 namespace POS.Client
 {
@@ -191,33 +192,114 @@ namespace POS.Client
             }
         }
 
-        // === NUOVO: Reconfigure POS ===
-        private void btnReconfigure_Click(object sender, RoutedEventArgs e)
+              // === MODIFICATO: Reconfigure POS ===
+        private async void btnReconfigure_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(
-                "This will delete the current POS configuration and require a new setup. Continue?",
+                "This will deactivate this POS on the server and delete the local configuration.\n" +
+                "You will need to run the setup wizard again.\n\nContinue?",
                 "Reconfigure POS",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
 
+            // Step 1: Verifica se il server è online
+            bool isServerOnline = await _connection.IsServerOnlineAsync();
+
+            // Step 2: Se online, disattiva il POS sul server
+            bool serverDeactivated = false;
+            if (isServerOnline 
+                && !string.IsNullOrEmpty(AppState.MachineToken) 
+                && AppState.PosClientId > 0 
+                && !string.IsNullOrEmpty(AppState.ServerUrl))
+            {
+                try
+                {
+                    using (var httpClient = new System.Net.Http.HttpClient())
+                    {
+                        httpClient.BaseAddress = new Uri(AppState.ServerUrl);
+                        httpClient.DefaultRequestHeaders.Authorization = 
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AppState.MachineToken);
+                        
+                        var response = await httpClient.PostAsync(
+                            $"pos-clients/{AppState.PosClientId}/self-deactivate", 
+                            new System.Net.Http.StringContent(""));
+                        
+                        if (response.IsSuccessStatusCode)
+                        {
+                            serverDeactivated = true;
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                        {
+                            serverDeactivated = true;
+                        }
+                        else
+                        {
+                            var content = await response.Content.ReadAsStringAsync();
+                            MessageBox.Show(
+                                $"Server warning: {content}\n\nProceeding with local cleanup.",
+                                "Server Warning",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Could not reach server to deactivate POS: {ex.Message}\n\n" +
+                        "Proceeding with local cleanup only.",
+                        "Connection Warning",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+            }
+            else if (!isServerOnline)
+            {
+                var continueWithoutServer = MessageBox.Show(
+                    "The server is currently unavailable.\n\n" +
+                    "If you continue, the local POS configuration will be cleared, the current connection settings will be removed, and you will need to run the setup wizard again when the backend becomes reachable.\n\n" +
+                    "This action will also interrupt any pending server-side deactivation process.\n\n" +
+                    "Do you want to continue anyway?",
+                    "Server Offline",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (continueWithoutServer != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
+            // Step 3: Cleanup locale completo
             _config.ClearSetupConfig();
             _config.ClearToken();
+            
             AppState.MachineToken = string.Empty;
             AppState.ServerUrl = string.Empty;
+            AppState.CurrentcompanyId = 0;
+            AppState.HardwareId = string.Empty;
+            AppState.PosClientId = 0;
+            AppState.WarehouseId = 0;
+            AppState.RegisterName = string.Empty;
+            AppState.AuthToken = string.Empty;
+            AppState.CurrentUserId = 0;
+            AppState.CurrentUserName = string.Empty;
+            AppState.CurrentShiftId = 0;
 
-            // Riavvia wizard
+            // Step 4: Apri wizard (modale su questa MainWindow)
             var wizard = new SetupWizardWindow();
-            var ok = wizard.ShowDialog() ?? false;
+            bool? ok = wizard.ShowDialog();
 
-            if (!ok)
+            if (ok != true)
             {
-                Application.Current.Shutdown();
+                // L'utente ha annullato: mantieni la MainWindow corrente aperta.
+                this.Activate();
                 return;
             }
 
-            // Ricarica config
+            // Step 5: Ricarica config
             var config = _config.LoadSetupConfig();
             if (config != null)
             {
@@ -230,7 +312,15 @@ namespace POS.Client
                 AppState.RegisterName = config.RegisterName;
             }
 
-            MessageBox.Show("POS reconfigured successfully!", "Done", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Step 6: Apri nuova MainWindow PRIMA di chiudere la vecchia.
+            // In questo modo l'applicazione mantiene una finestra principale valida.
+            var newMain = new MainWindow();
+            Application.Current.MainWindow = newMain;
+            Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            newMain.Show();
+
+            // Step 7: Chiudi la vecchia MainWindow
+            this.Close();
         }
     }
 }
