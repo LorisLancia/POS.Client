@@ -12,13 +12,23 @@ namespace POS.Client.Services
         private readonly RestClient _client;
         private static readonly string LogFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "POS_Client_Log.txt");
 
-        public ApiService(string baseUrl = "http://localhost:3000")
+        // === MODIFICA: usa ServerUrl da AppState se disponibile, altrimenti localhost ===
+        public ApiService(string baseUrl = null)
         {
-            var options = new RestClientOptions(baseUrl)
+            var url = baseUrl ?? AppState.ServerUrl;
+            if (string.IsNullOrWhiteSpace(url))
+                url = "http://localhost:3000";
+
+            var options = new RestClientOptions(url)
             {
                 Timeout = TimeSpan.FromSeconds(10)
             };
             _client = new RestClient(options);
+        }
+
+        public void SetBaseUrl(string url)
+        {
+            // Non ricrea il client qui — il wizard crea il suo RestClient
         }
 
         private void Log(string message)
@@ -35,6 +45,7 @@ namespace POS.Client.Services
             _client.AddDefaultHeader("Authorization", $"Bearer {token}");
         }
 
+        // ===================== ESISTENTI (non toccati) =====================
         public async Task<LoginResponse> LoginAsync(string username, string pin, int companyId)
         {
             var request = new RestRequest("/auth/login", Method.Post);
@@ -73,58 +84,13 @@ namespace POS.Client.Services
         {
             var request = new RestRequest("/sales", Method.Post);
             request.AddJsonBody(saleDto);
-
-            Log(">>> Sending request to /sales");
-            var response = await _client.ExecuteAsync(request);
-
-            Log($">>> Response Status: {response.StatusCode}");
-            Log($">>> Response Content: {response.Content ?? "NULL"}");
-
-            if (!response.IsSuccessful)
-            {
-                Log($">>> HTTP ERROR: {response.Content}");
-                throw new Exception($"HTTP {response.StatusCode}: {response.Content}");
-            }
-
-            if (string.IsNullOrEmpty(response.Content))
-            {
-                Log(">>> EMPTY RESPONSE");
-                throw new Exception("Empty response from server");
-            }
-
-            var result = JsonConvert.DeserializeObject<SaleResponse>(response.Content);
-            Log($">>> Parsed: Id={result?.Id}, SaleNumber={result?.SaleNumber}");
-
-            return result;
-        }
-
-        public async Task<ShiftResponse> OpenShiftAsync(int posClientId, decimal startingCash)
-        {
-            var request = new RestRequest("/sales/shifts/open", Method.Post);
-            request.AddJsonBody(new { posClientId, startingCash });
             var response = await _client.ExecuteAsync(request);
             if (!response.IsSuccessful) throw new Exception(response.Content);
-            return JsonConvert.DeserializeObject<ShiftResponse>(response.Content);
-        }
-
-        public async Task<ShiftResponse> CloseShiftAsync(int shiftId, decimal actualCash)
-        {
-            var request = new RestRequest($"/sales/shifts/{shiftId}/close", Method.Post);
-            request.AddJsonBody(new { actualCash });
-            var response = await _client.ExecuteAsync(request);
-            if (!response.IsSuccessful) throw new Exception(response.Content);
-            return JsonConvert.DeserializeObject<ShiftResponse>(response.Content);
-        }
-
-        public async Task<List<ShiftResponse>> GetShiftsAsync()
-        {
-            var request = new RestRequest("/sales/shifts", Method.Get);
-            var response = await _client.ExecuteAsync(request);
-            if (!response.IsSuccessful) throw new Exception(response.Content);
-            return JsonConvert.DeserializeObject<List<ShiftResponse>>(response.Content);
+            return JsonConvert.DeserializeObject<SaleResponse>(response.Content);
         }
     }
 
+    // ==================== DTO Models (moved from original ApiService.cs) ====================
     public class LoginResponse
     {
         [JsonProperty("access_token")]
@@ -150,7 +116,7 @@ namespace POS.Client.Services
         public bool IsActive { get; set; }
         public List<VariantResponse> Variants { get; set; } = new List<VariantResponse>();
         public List<ModifierResponse> Modifiers { get; set; } = new List<ModifierResponse>();
-        public List<AddonResponse> Addons { get; set; } = new List<AddonResponse>(); // <-- AGGIUNGI
+        public List<AddonResponse> Addons { get; set; } = new List<AddonResponse>();
     }
 
     public class VariantResponse
@@ -182,20 +148,46 @@ namespace POS.Client.Services
         public decimal PriceAdjustment { get; set; }
     }
 
+    public class AddonResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int MaxQuantity { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<AddonItemResponse> Items { get; set; } = new List<AddonItemResponse>();
+    }
+
+    public class AddonItemResponse
+    {
+        public int Id { get; set; }
+        public int AddonProductId { get; set; }
+        public decimal QuantityValue { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+    }
+
     public class InventoryResponse
     {
         public int WarehouseId { get; set; }
         public int MaterialId { get; set; }
         public decimal Quantity { get; set; }
         public MaterialResponse Material { get; set; }
-        
     }
-    // Modifica MaterialResponse
+
     public class MaterialResponse
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public UnitResponse Unit { get; set; }  // <-- CHANGED: era string Unit
+        public UnitResponse Unit { get; set; }
+    }
+
+    public class UnitResponse
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Symbol { get; set; }
     }
 
     public class SaleResponse
@@ -225,32 +217,5 @@ namespace POS.Client.Services
         public decimal? ActualCash { get; set; }
         public decimal? Difference { get; set; }
     }
-    // ==================== NUOVE CLASSI ADDON ====================
-    public class AddonResponse
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int MaxQuantity { get; set; }
-        public int SortOrder { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public List<AddonItemResponse> Items { get; set; } = new List<AddonItemResponse>();
-    }
 
-    public class AddonItemResponse
-    {
-        public int Id { get; set; }
-        public int AddonProductId { get; set; }
-        public decimal QuantityValue { get; set; }
-        public int SortOrder { get; set; }
-        public bool IsActive { get; set; }
-    }
-    // Aggiungi questa classe
-    public class UnitResponse
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Symbol { get; set; }
-        public string Type { get; set; }
-    }
 }

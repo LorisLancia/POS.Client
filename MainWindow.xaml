@@ -13,8 +13,10 @@
         <ToolBar Grid.Row="0" Background="#FF2D2D30">
             <Button x:Name="btnLogin" Content="Login" Click="btnLogin_Click" Foreground="White" Background="#FF007ACC" Padding="15,5"/>
             <Button x:Name="btnCashier" Content="Cashier" Click="btnCashier_Click" Foreground="White" Background="#FF007ACC" Padding="15,5" Margin="5,0,0,0"/>
-            <Button x:Name="btnSync" Content="Sync Products" Click="btnSync_Click" Foreground="White" Background="#FF007ACC" Padding="15,5" Margin="5,0,0,0"/>
+            <Button x:Name="btnSync" Content="🔄 Sync Products" Click="btnSync_Click" Foreground="White" Background="#FF007ACC" Padding="15,5" Margin="5,0,0,0"/>
             <Button x:Name="btnSyncSales" Content="Force Sync Sales" Click="btnSyncSales_Click" Foreground="White" Background="#FFDC3545" Padding="15,5" Margin="5,0,0,0"/>
+            <Separator Margin="10,0"/>
+            <Button x:Name="btnReconfigure" Content="⚙ Reconfigure" Click="btnReconfigure_Click" Foreground="White" Background="#FF6C757D" Padding="15,5"/>
             <Separator Margin="10,0"/>
             <Ellipse x:Name="ellipseStatus" Width="12" Height="12" Fill="Gray" Margin="5,0"/>
             <TextBlock x:Name="txtConnection" Text="Checking..." Foreground="White" VerticalAlignment="Center"/>

@@ -41,13 +41,13 @@ namespace POS.Client.Views
             {
                 AppState.CurrentShiftId = localOpen.LocalId;
                 string serverTag = localOpen.ServerId.HasValue ? $"Server#{localOpen.ServerId}" : "Local";
-                Title = $"Cashier - Shift #{localOpen.LocalId} ({serverTag})";
+                Title = $"Cashier - {AppState.RegisterName} - Shift #{localOpen.LocalId} ({serverTag})";
                 return;
             }
 
             var localShift = new LocalShift
             {
-                PosClientId = 1,
+                PosClientId = AppState.PosClientId > 0 ? AppState.PosClientId : 1,
                 UserId = AppState.CurrentUserId > 0 ? AppState.CurrentUserId : 1,
                 StartingCash = 1000,
                 Status = "open",
@@ -57,7 +57,7 @@ namespace POS.Client.Views
             db.SaveChanges();
 
             AppState.CurrentShiftId = localShift.LocalId;
-            Title = $"Cashier - Shift #{localShift.LocalId} (Local)";
+            Title = $"Cashier - {AppState.RegisterName} - Shift #{localShift.LocalId} (Local)";
         }
 
         private void LoadProducts()
@@ -259,8 +259,8 @@ namespace POS.Client.Views
                 var sale = new LocalSale
                 {
                     companyId = AppState.CurrentcompanyId,
-                    WarehouseId = 1,
-                    PosClientId = 1,
+                    WarehouseId = AppState.WarehouseId > 0 ? AppState.WarehouseId : 1,
+                    PosClientId = AppState.PosClientId > 0 ? AppState.PosClientId : 1,
                     ShiftId = AppState.CurrentShiftId,
                     UserId = AppState.CurrentUserId > 0 ? AppState.CurrentUserId : 1,
                     Subtotal = _subtotal,

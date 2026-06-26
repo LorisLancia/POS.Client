@@ -39,20 +39,23 @@ namespace POS.Client.Views
                     try
                     {
                         var api = new ApiService();
-                        var machine = await api.GetMachineTokenAsync("DUMMY-HARDWARE-ID-001", 1);
+                        var machine = await api.GetMachineTokenAsync(
+                            AppState.HardwareId,
+                            AppState.PosClientId);
                         var config = new ConfigService();
                         config.SaveToken(machine.AccessToken);
                         AppState.MachineToken = machine.AccessToken;
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Machine token error: {ex.Message}", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show($"Machine token error: {ex.Message}", "Warning",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
 
                 string mode = result.IsOnline ? "ONLINE" : "OFFLINE";
                 MessageBox.Show(
-                    $"Welcome {result.User.FullName}!\nMode: {mode}",
+                    $"Welcome {result.User.FullName}! Mode: {mode}",
                     "Login Success",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);

@@ -28,11 +28,11 @@ namespace POS.Client
             AppState.CurrentUserName = string.Empty;
             AppState.CurrentShiftId = 0;
 
-            // Carica MachineToken per sync
-            var machineToken = _config.GetToken();
-            if (!string.IsNullOrEmpty(machineToken))
+            // Carica MachineToken per sync (da setup config)
+            var setupConfig = _config.LoadSetupConfig();
+            if (setupConfig != null && !string.IsNullOrEmpty(setupConfig.MachineToken))
             {
-                AppState.MachineToken = machineToken;
+                AppState.MachineToken = setupConfig.MachineToken;
             }
 
             _connectionTimer = new DispatcherTimer();
@@ -77,7 +77,7 @@ namespace POS.Client
 
         private async Task BackgroundSync()
         {
-            if (_isSyncing) return; // Evita sovrapposizioni
+            if (_isSyncing) return;
             _isSyncing = true;
 
             try
@@ -161,7 +161,7 @@ namespace POS.Client
             txtStatus.Text = "Syncing products...";
             try
             {
-                await _syncService.SyncProductsAsync(1);
+                await _syncService.SyncProductsAsync(AppState.CurrentcompanyId);
                 txtStatus.Text = $"Products: {_syncService.GetProducts().Count}";
             }
             catch (Exception ex)
@@ -175,7 +175,6 @@ namespace POS.Client
             txtStatus.Text = "Force syncing sales...";
             await BackgroundSync();
 
-            // Mostra risultato finale
             var token = AppState.MachineToken;
             if (!string.IsNullOrEmpty(token))
             {
@@ -187,9 +186,51 @@ namespace POS.Client
                 }
                 else
                 {
-                    MessageBox.Show($"{pending} sale(s) still pending.\nCheck log file for details.", "Sync Incomplete", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"{pending} sale(s) still pending. Check log file for details.", "Sync Incomplete", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
+        }
+
+        // === NUOVO: Reconfigure POS ===
+        private void btnReconfigure_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "This will delete the current POS configuration and require a new setup. Continue?",
+                "Reconfigure POS",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            _config.ClearSetupConfig();
+            _config.ClearToken();
+            AppState.MachineToken = string.Empty;
+            AppState.ServerUrl = string.Empty;
+
+            // Riavvia wizard
+            var wizard = new SetupWizardWindow();
+            var ok = wizard.ShowDialog() ?? false;
+
+            if (!ok)
+            {
+                Application.Current.Shutdown();
+                return;
+            }
+
+            // Ricarica config
+            var config = _config.LoadSetupConfig();
+            if (config != null)
+            {
+                AppState.ServerUrl = config.ServerUrl;
+                AppState.MachineToken = config.MachineToken;
+                AppState.CurrentcompanyId = config.CompanyId;
+                AppState.HardwareId = config.HardwareId;
+                AppState.PosClientId = config.PosClientId;
+                AppState.WarehouseId = config.WarehouseId;
+                AppState.RegisterName = config.RegisterName;
+            }
+
+            MessageBox.Show("POS reconfigured successfully!", "Done", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

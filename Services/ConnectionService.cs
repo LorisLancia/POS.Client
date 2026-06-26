@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using POS.Client.Services;
 
 namespace POS.Client.Services
 {
@@ -17,7 +18,11 @@ namespace POS.Client.Services
         {
             try
             {
-                var response = await _client.GetAsync("http://localhost:3000/auth/health");
+                var url = AppState.ServerUrl;
+                if (string.IsNullOrWhiteSpace(url))
+                    url = "http://localhost:3000";
+
+                var response = await _client.GetAsync($"{url.TrimEnd('/')}/auth/health");
                 return response.IsSuccessStatusCode;
             }
             catch
