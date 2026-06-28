@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using POS.Client.Data;
 using POS.Client.Models;
+using POS.Client.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,9 +24,8 @@ namespace POS.Client.Services
         public async Task SyncProductsAsync(int companyId)
         {
             var products = await _apiService.GetProductsForPOSAsync(companyId);
-            var inventory = await _apiService.GetInventoryForPOSAsync(1);
 
-            // Clear old data
+            // Clear old product data only (NOT inventory/materials — server-side only)
             _db.ProductAddonItems.RemoveRange(_db.ProductAddonItems);
             _db.ProductAddons.RemoveRange(_db.ProductAddons);
             _db.ProductVariants.RemoveRange(_db.ProductVariants);
@@ -33,8 +33,6 @@ namespace POS.Client.Services
             _db.ModifierOptions.RemoveRange(_db.ModifierOptions);
             _db.ModifierGroups.RemoveRange(_db.ModifierGroups);
             _db.Products.RemoveRange(_db.Products);
-            _db.Materials.RemoveRange(_db.Materials);
-            _db.Inventory.RemoveRange(_db.Inventory);
             _db.SaveChanges();
 
             foreach (var p in products)
@@ -109,7 +107,7 @@ namespace POS.Client.Services
                     }
                 }
 
-                // ADDON - FIX CRITICO: usa localAddon.LocalId per gli items
+                // ADDON
                 foreach (var addon in p.Addons ?? new List<AddonResponse>())
                 {
                     var localAddon = new LocalProductAddon
@@ -123,61 +121,36 @@ namespace POS.Client.Services
                         CreatedAt = addon.CreatedAt
                     };
                     _db.ProductAddons.Add(localAddon);
-                    _db.SaveChanges(); // Per ottenere localAddon.LocalId
+                    _db.SaveChanges();
 
                     foreach (var item in addon.Items ?? new List<AddonItemResponse>())
-{
-    _db.ProductAddonItems.Add(new LocalProductAddonItem
-    {
-        ServerId = item.Id,
-        AddonId = localAddon.ServerId,  // <-- FIX: era localAddon.LocalId!
-        AddonProductId = item.AddonProductId,
-        QuantityValue = item.QuantityValue,
-        SortOrder = item.SortOrder,
-        IsActive = item.IsActive
-    });
-}
-                }
-            }
-
-            // Inventory
-            foreach (var inv in inventory)
-            {
-                _db.Inventory.Add(new LocalInventory
-                {
-                    WarehouseId = inv.WarehouseId,
-                    MaterialId = inv.MaterialId,
-                    Quantity = inv.Quantity,
-                    LastUpdated = DateTime.Now
-                });
-
-                if (!_db.Materials.Any(m => m.ServerId == inv.MaterialId))
-                {
-                    _db.Materials.Add(new LocalMaterial
                     {
-                        ServerId = inv.MaterialId,
-                        companyId = companyId,
-                        Name = inv.Material?.Name ?? "Unknown",
-                        Unit = inv.Material?.Unit?.Symbol ?? "piece",
-                        IsActive = true
-                    });
+                        _db.ProductAddonItems.Add(new LocalProductAddonItem
+                        {
+                            ServerId = item.Id,
+                            AddonId = localAddon.ServerId,
+                            AddonProductId = item.AddonProductId,
+                            QuantityValue = item.QuantityValue,
+                            SortOrder = item.SortOrder,
+                            IsActive = item.IsActive
+                        });
+                    }
                 }
             }
 
             _db.SaveChanges();
         }
 
-        // FIX: Include Addons e Items
-      public List<LocalProduct> GetProducts()
-{
-    using var db = new POSDbContext();  // <-- NUOVO contesto
-    return db.Products
-        .AsNoTracking()
-        .Where(p => p.IsActive)
-        .Include(p => p.Addons)
-        .ThenInclude(a => a.Items)
-        .ToList();
-}
+        public List<LocalProduct> GetProducts()
+        {
+            using var db = new POSDbContext();
+            return db.Products
+                .AsNoTracking()
+                .Where(p => p.IsActive)
+                .Include(p => p.Addons)
+                .ThenInclude(a => a.Items)
+                .ToList();
+        }
 
         public List<LocalProductVariant> GetVariants(int productId)
         {

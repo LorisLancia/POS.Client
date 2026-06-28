@@ -4,6 +4,11 @@
         Title="Cashier" Height="750" Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="#FFF0F0F0">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
